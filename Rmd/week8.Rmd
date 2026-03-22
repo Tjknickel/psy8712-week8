@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # **Reproducible Image and Online Resources**
 An image of this project as of *`r Sys.Date()`* can be accessed by [clicking this link]().
-An interactive web app is available by [clicking this link instead]().
+An interactive web app is available by [clicking this link instead](https://tjknickel.shinyapps.io/shiny_week8/).
 
 # **Script Settings and Resources**
 ```{r, message = FALSE, warning = FALSE}
@@ -26,7 +26,8 @@ library(kableExtra)
 This chunk imports the dataset and creates a clean version as a tibble that includes a reversed code version of q5 and relocating the column to the correct location. This was needed in order to accurately calculate mean scores and data visualization in later sections. 
 ```{r}
 week8_tbl <- read.csv("../data/week3.csv", header = TRUE) %>%
-  mutate(Q5 = as.integer(6 - q5)) %>%
+  mutate(Q5 = as.integer(6 - q5), 
+         gender = factor(gender, levels = c("M", "F"), labels = c("Male", "Female"))) %>%
   select(-q5) %>%
   rename(q5 = Q5) %>%
   relocate(q5, .after = q4)
@@ -63,6 +64,6 @@ The correlation observed is `r rvalue_chr`. The p-value is `r cor_list$p.value`,
 This chunk exports a "skinny" version of the dataset, which only includes columns q1 to q10 and the mean_x and mean_y columns as this is what is necessary to run the code. The exported version is saved as an RDS file, as this is useful for creating a shiny app. 
 ```{r}
 week8_tbl %>%
-  select(q1:q10, mean_x, mean_y) %>%
-  saveRDS("../shiny/week8.rds")
+  select(timeEnd, gender, mean_x, mean_y) %>%
+  saveRDS("../shiny/shiny_week8/week8.rds")
 ```
