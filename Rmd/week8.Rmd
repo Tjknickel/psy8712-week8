@@ -1,0 +1,68 @@
+---
+title: "PSY 8712 Week 8 Project"
+author: "Taylor Knickel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **Reproducible Image and Online Resources**
+An image of this project as of *`r Sys.Date()`* can be accessed by [clicking this link]().
+An interactive web app is available by [clicking this link instead]().
+
+# **Script Settings and Resources**
+```{r, message = FALSE, warning = FALSE}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(kableExtra)
+```
+
+# **Data Import and Cleaning**
+This chunk imports the dataset and creates a clean version as a tibble that includes a reversed code version of q5 and relocating the column to the correct location. This was needed in order to accurately calculate mean scores and data visualization in later sections. 
+```{r}
+week8_tbl <- read.csv("../data/week3.csv", header = TRUE) %>%
+  mutate(Q5 = as.integer(6 - q5)) %>%
+  select(-q5) %>%
+  rename(q5 = Q5) %>%
+  relocate(q5, .after = q4)
+```
+
+# **Visualization**
+This chunk first displays the data within q1 to q6, and then includes a scatterplot of the mean scores of q1 to q6 on the x-axis and the mean scores of q8 to q10 on the y-axis. The scatterplot also includes a purple OLS regression line with a shaded error band that displays the confidence interval around the OLS line.
+```{r, echo = FALSE}
+week8_tbl %>%
+  select(q1:q6) %>%
+  kableExtra::kable()
+week8_tbl <- week8_tbl %>%
+  mutate(mean_x = rowMeans(select(., q1:q6), na.rm = TRUE),
+         mean_y = rowMeans(select(., q8:q10), na.rm = TRUE))
+  ggplot(week8_tbl, aes(x = mean_x, y = mean_y)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "purple", fill = "purple") +
+  labs(x = "Mean Scores of Q1-Q6", y = "Mean Scores of Q8-Q10")
+```
+
+# **Analysis**
+This chunk performs a correlation test using the mean scores from q1 to q6 and mean scores from q8 to q10 data. The output displays the correlation (r value) and p-value from the correlation test. 
+```{r}
+cor_list <- cor.test(week8_tbl$mean_x, week8_tbl$mean_y)
+
+cor_list$estimate
+cor_list$p.value
+
+rvalue_chr <- str_replace(as.character(round(cor_list$estimate, 2)), "^0", "")
+```
+The correlation observed is `r rvalue_chr`. The p-value is `r cor_list$p.value`, which is greater than the conventional alpha/significance level of 0.05, so we fail to reject the null hypothesis that there is no correlation between mean scores from questions 1 to 6 and mean scores from questions 8 to 10. 
+
+# **Data Export**
+This chunk exports a "skinny" version of the dataset, which only includes columns q1 to q10 and the mean_x and mean_y columns as this is what is necessary to run the code. The exported version is saved as an RDS file, as this is useful for creating a shiny app. 
+```{r}
+week8_tbl %>%
+  select(q1:q10, mean_x, mean_y) %>%
+  saveRDS("../shiny/week8.rds")
+```
